@@ -1,15 +1,45 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:muet_past_papers/models/department.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class FirebaseRepo {
   static var instance = FirebaseFirestore.instance;
   static var departmentCollection = instance.collection('departments');
   static var pastPapersCollection = instance.collection('pastPapers');
 
+  static var storage = FirebaseStorage.instance;
+
   static Stream<QuerySnapshot<Map<String, dynamic>>> getDepartments() {
     return departmentCollection.snapshots();
 
     // return depts;
+  }
+
+  static Future<String?> uploadImage(String imagePath) async {
+    var ref = storage
+        .ref()
+        .child('pastPapers/${DateTime.now().millisecondsSinceEpoch}.jpg');
+    var uploadTask = ref.putFile(File(imagePath));
+    var url = await (await uploadTask).ref.getDownloadURL();
+    return url;
+  }
+
+  static Future<void> addPastPaper(
+    String departmentUid,
+    String subject,
+    int semester,
+    String filePath,
+  ) async {
+    var url = await uploadImage(filePath);
+    if (url != null) {
+      await instance.collection('uploadedPastPapers').add({
+        'deptId': departmentUid,
+        'subject': subject,
+        'paperUrl': url,
+        'semester': semester,
+      });
+    }
   }
 
   static Future<List<String>> getSubjects(String deptId, int semester) async {

@@ -246,6 +246,9 @@ class _UploadPaperBottomSheetState extends State<UploadPaperBottomSheet> {
   String? selectedSubject;
   XFile? selectedFile;
 
+  bool isUploading = false;
+  bool hasUploaded = false;
+
   Future<void> loadDepartments() async {
     var depts = await FirebaseRepo.instance.collection('departments').get();
     var _departments =
@@ -269,317 +272,381 @@ class _UploadPaperBottomSheetState extends State<UploadPaperBottomSheet> {
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: departments == null
-            ? Center(
-                child: CircularProgressIndicator(
-                  color: Color(0xFF23262F),
-                ),
-              )
-            : Column(
+        child: hasUploaded
+            ? Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      IconButton(
-                        color: Color(0xFF23262F),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        icon: Icon(Icons.close),
-                      ),
-                    ],
-                  ),
-                  // SizedBox(
-                  //   height: 8,
-                  // ),
-                  Text(
-                    'Upload a Paper',
+                  const Text(
+                    'Paper uploaded successfully!',
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
+                    textAlign: TextAlign.center,
                   ),
-                  SizedBox(height: 32),
-                  DropdownButtonFormField<Department>(
-                    decoration: InputDecoration(
-                      border: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(30),
-                        ),
-                      ),
-                      labelText: 'Department',
-                    ),
-                    items: departments!
-                        .map(
-                          (e) => DropdownMenuItem<Department>(
-                            value: e,
-                            child: Text(e.name),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (v) {
-                      setState(() {
-                        selectedDepartment = v;
-                        semesters = List.generate(
-                            v!.noOfSemesters, (index) => index + 1).toList();
-                        selectedSemester = null;
-                        selectedSubject = null;
-                      });
-                    },
-                    value: selectedDepartment,
-                  ),
-                  SizedBox(height: 16),
-
-                  if (departments != null &&
-                      selectedDepartment != null &&
-                      semesters != null) ...[
-                    DropdownButtonFormField<int>(
-                      decoration: InputDecoration(
-                        border: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(30),
-                          ),
-                        ),
-                        labelText: 'Semester',
-                      ),
-                      items: semesters!
-                          .map(
-                            (e) => DropdownMenuItem<int>(
-                              value: e,
-                              child: Text(e.toString()),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (v) async {
-                        setState(() {
-                          selectedSemester = v;
-                          selectedSubject = null;
-                          subjects = null;
-                        });
-                        var _subjects = await FirebaseRepo.getSubjects(
-                            selectedDepartment!.uid, selectedSemester!);
-                        setState(() {
-                          subjects = _subjects;
-                        });
-                      },
-                      value: selectedSemester,
-                    ),
-                    SizedBox(height: 16),
-                  ],
-                  if (departments != null &&
-                      selectedDepartment != null &&
-                      semesters != null &&
-                      selectedSemester != null) ...[
-                    TextField(
-                      decoration: InputDecoration(
-                        border: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(30),
-                          ),
-                        ),
-                        labelText: 'Subject',
-                      ),
-                      onChanged: (v) {
-                        setState(() {
-                          selectedSubject = v.isEmpty ? null : v;
-                        });
-                      },
-                    ),
-                    // ? DropdownButtonFormField<String>(
-                    //     decoration: InputDecoration(
-                    //       border: const OutlineInputBorder(),
-                    //       labelText: 'Subject',
-                    //     ),
-                    //     items: subjects!
-                    //         .map(
-                    //           (e) => DropdownMenuItem<String>(
-                    //             value: e,
-                    //             child: Text(e),
-                    //           ),
-                    //         )
-                    //         .toList(),
-                    //     onChanged: (v) {},
-                    //   )
-                    SizedBox(height: 16),
-                  ],
-                  // Row containting a button "Select File" and a text label showing the name of the file
-                  if (selectedDepartment != null &&
-                      selectedSemester != null &&
-                      selectedSubject != null) ...[
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              backgroundColor: Color(0xFF23262F),
-                            ),
-                            onPressed: () {
-                              // showDialog for file selection using camera and gallery
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: Text('Select File'),
-                                  content: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          shape: StadiumBorder(),
-                                          backgroundColor: Color(0xFF23262F),
-                                        ),
-                                        onPressed: () async {
-                                          var file = await ImagePicker()
-                                              .pickImage(
-                                                  source: ImageSource.gallery);
-                                          if (file != null) {
-                                            setState(() {
-                                              selectedFile = file;
-                                            });
-                                          } else {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                    'No file selected. Please try again.'),
-                                              ),
-                                            );
-                                          }
-                                          Navigator.of(context).pop();
-                                        },
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Text('From Gallery'),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      // SizedBox(height: 8),
-                                      ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          shape: StadiumBorder(),
-                                          backgroundColor: Color(0xFF23262F),
-                                        ),
-                                        onPressed: () async {
-                                          var file = await ImagePicker()
-                                              .pickImage(
-                                                  source: ImageSource.camera);
-                                          if (file != null) {
-                                            setState(() {
-                                              selectedFile = file;
-                                            });
-                                          } else {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                    'No file captured. Please try again.'),
-                                              ),
-                                            );
-                                          }
-                                          Navigator.of(context).pop();
-                                        },
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Text('From Camera'),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                            child: Text('Select File'),
-                          ),
-                        ),
-                        SizedBox(width: 16),
-                        Expanded(
-                          child: Text(
-                            selectedFile == null
-                                ? 'No file selected'
-                                : '${selectedFile!.name.substring(0, 15)}...',
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 16),
-                  ],
+                  const SizedBox(height: 16),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       shape: const StadiumBorder(),
                       backgroundColor: Color(0xFF23262F),
                     ),
-                    onPressed: selectedDepartment != null &&
-                            selectedSemester != null &&
-                            selectedSubject != null &&
-                            selectedFile != null
-                        ? () {}
-                        : null,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Center(
-                            child: Text(
-                              'Upload',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  // Cancel button red color
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      shape: const StadiumBorder(),
-                      backgroundColor: Colors.red,
-                    ),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Center(
-                            child: Text(
-                              'Cancel',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'OK',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
+                            textAlign: TextAlign.center,
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
-              ),
+              )
+            : departments == null || isUploading
+                ? Center(
+                    child: CircularProgressIndicator(
+                      color: Color(0xFF23262F),
+                    ),
+                  )
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          IconButton(
+                            color: Color(0xFF23262F),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            icon: Icon(Icons.close),
+                          ),
+                        ],
+                      ),
+                      // SizedBox(
+                      //   height: 8,
+                      // ),
+                      Text(
+                        'Upload a Paper',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 32),
+                      DropdownButtonFormField<Department>(
+                        decoration: InputDecoration(
+                          border: const OutlineInputBorder(
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(30),
+                            ),
+                          ),
+                          labelText: 'Department',
+                        ),
+                        items: departments!
+                            .map(
+                              (e) => DropdownMenuItem<Department>(
+                                value: e,
+                                child: Text(e.name),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (v) {
+                          setState(() {
+                            selectedDepartment = v;
+                            semesters = List.generate(
+                                    v!.noOfSemesters, (index) => index + 1)
+                                .toList();
+                            selectedSemester = null;
+                            selectedSubject = null;
+                          });
+                        },
+                        value: selectedDepartment,
+                      ),
+                      SizedBox(height: 16),
+
+                      if (departments != null &&
+                          selectedDepartment != null &&
+                          semesters != null) ...[
+                        DropdownButtonFormField<int>(
+                          decoration: InputDecoration(
+                            border: const OutlineInputBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(30),
+                              ),
+                            ),
+                            labelText: 'Semester',
+                          ),
+                          items: semesters!
+                              .map(
+                                (e) => DropdownMenuItem<int>(
+                                  value: e,
+                                  child: Text(e.toString()),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (v) async {
+                            setState(() {
+                              selectedSemester = v;
+                              selectedSubject = null;
+                              subjects = null;
+                            });
+                            var _subjects = await FirebaseRepo.getSubjects(
+                                selectedDepartment!.uid, selectedSemester!);
+                            setState(() {
+                              subjects = _subjects;
+                            });
+                          },
+                          value: selectedSemester,
+                        ),
+                        SizedBox(height: 16),
+                      ],
+                      if (departments != null &&
+                          selectedDepartment != null &&
+                          semesters != null &&
+                          selectedSemester != null) ...[
+                        TextField(
+                          decoration: InputDecoration(
+                            border: const OutlineInputBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(30),
+                              ),
+                            ),
+                            labelText: 'Subject',
+                          ),
+                          onChanged: (v) {
+                            setState(() {
+                              selectedSubject = v.isEmpty ? null : v;
+                            });
+                          },
+                        ),
+                        // ? DropdownButtonFormField<String>(
+                        //     decoration: InputDecoration(
+                        //       border: const OutlineInputBorder(),
+                        //       labelText: 'Subject',
+                        //     ),
+                        //     items: subjects!
+                        //         .map(
+                        //           (e) => DropdownMenuItem<String>(
+                        //             value: e,
+                        //             child: Text(e),
+                        //           ),
+                        //         )
+                        //         .toList(),
+                        //     onChanged: (v) {},
+                        //   )
+                        SizedBox(height: 16),
+                      ],
+                      // Row containting a button "Select File" and a text label showing the name of the file
+                      if (selectedDepartment != null &&
+                          selectedSemester != null &&
+                          selectedSubject != null) ...[
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  backgroundColor: Color(0xFF23262F),
+                                ),
+                                onPressed: () {
+                                  // showDialog for file selection using camera and gallery
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: Text('Select File'),
+                                      content: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          ElevatedButton(
+                                            style: ElevatedButton.styleFrom(
+                                              shape: StadiumBorder(),
+                                              backgroundColor:
+                                                  Color(0xFF23262F),
+                                            ),
+                                            onPressed: () async {
+                                              var file = await ImagePicker()
+                                                  .pickImage(
+                                                      source:
+                                                          ImageSource.gallery);
+                                              if (file != null) {
+                                                setState(() {
+                                                  selectedFile = file;
+                                                });
+                                              } else {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                        'No file selected. Please try again.'),
+                                                  ),
+                                                );
+                                              }
+                                              Navigator.of(context).pop();
+                                            },
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: Text('From Gallery'),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          // SizedBox(height: 8),
+                                          ElevatedButton(
+                                            style: ElevatedButton.styleFrom(
+                                              shape: StadiumBorder(),
+                                              backgroundColor:
+                                                  Color(0xFF23262F),
+                                            ),
+                                            onPressed: () async {
+                                              var file = await ImagePicker()
+                                                  .pickImage(
+                                                      source:
+                                                          ImageSource.camera);
+                                              if (file != null) {
+                                                setState(() {
+                                                  selectedFile = file;
+                                                });
+                                              } else {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                        'No file captured. Please try again.'),
+                                                  ),
+                                                );
+                                              }
+                                              Navigator.of(context).pop();
+                                            },
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.all(8.0),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Text('From Camera'),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Text('Select File'),
+                              ),
+                            ),
+                            SizedBox(width: 16),
+                            Expanded(
+                              child: Text(
+                                selectedFile == null
+                                    ? 'No file selected'
+                                    : '${selectedFile!.name.substring(0, 15)}...',
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                      ],
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          shape: const StadiumBorder(),
+                          backgroundColor: Color(0xFF23262F),
+                        ),
+                        onPressed: selectedDepartment != null &&
+                                selectedSemester != null &&
+                                selectedSubject != null &&
+                                selectedFile != null
+                            ? () async {
+                                setState(() {
+                                  isUploading = true;
+                                });
+                                await FirebaseRepo.addPastPaper(
+                                  selectedDepartment!.uid,
+                                  selectedSubject!,
+                                  selectedSemester!,
+                                  selectedFile!.path,
+                                );
+                                setState(() {
+                                  isUploading = false;
+                                  hasUploaded = true;
+                                  selectedDepartment = null;
+                                  selectedSemester = null;
+                                  selectedSubject = null;
+                                  selectedFile = null;
+                                });
+                              }
+                            : null,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Center(
+                                child: Text(
+                                  'Upload',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      // Cancel button red color
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          shape: const StadiumBorder(),
+                          backgroundColor: Colors.red,
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Center(
+                                child: Text(
+                                  'Cancel',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
       ),
     );
   }
