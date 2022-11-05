@@ -1,0 +1,39 @@
+{
+    "project_info": {
+      "project_number": "290616115106",
+      "project_id": "muet-past-papers",
+      "storage_bucket": "muet-past-papers.appspot.com"
+    },
+    "client": [
+      {
+        "client_info": {
+          "mobilesdk_app_id": "1:290616115106:android:62bb980fa9546e8b83fcfb",
+          "android_client_info": {
+            "package_name": "com.jmrchelani.muet_past_papers"
+          }
+        },
+        "oauth_client": [
+          {
+            "client_id": "290616115106-6cqefrm9sta9qtfmreve5fasg654rp6u.apps.googleusercontent.com",
+            "client_type": 3
+          }
+        ],
+        "api_key": [
+          {
+            "current_key": "AIzaSyBy6-5IvaAiYc_GxoQEKaUwtOJRZxEX6Mc"
+          }
+        ],
+        "services": {
+          "appinvite_service": {
+            "other_platform_oauth_client": [
+              {
+                "client_id": "290616115106-6cqefrm9sta9qtfmreve5fasg654rp6u.apps.googleusercontent.com",
+                "client_type": 3
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "configuration_version": "1"
+  }
