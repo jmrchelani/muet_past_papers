@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_network/image_network.dart';
 import 'package:muet_past_papers/models/department.dart';
 import 'package:muet_past_papers/screens/subject_screen.dart';
 
@@ -31,14 +33,21 @@ class DepartmentScreen extends StatelessWidget {
                   bottomLeft: Radius.circular(30),
                   bottomRight: Radius.circular(30),
                 ),
-                child: Image.network(
-                  department.imageUrl,
-                  height: 230,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  // colorBlendMode: BlendMode.saturation,
-                  // color: Colors.grey,
-                ),
+                child: kIsWeb
+                    ? ImageNetwork(
+                        image: department.imageUrl,
+                        height: 230,
+                        width: MediaQuery.of(context).size.width,
+                        fitWeb: BoxFitWeb.cover,
+                      )
+                    : Image.network(
+                        department.imageUrl,
+                        height: 230,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        // colorBlendMode: BlendMode.saturation,
+                        // color: Colors.grey,
+                      ),
               ),
               Padding(
                 padding: const EdgeInsets.all(16.0),

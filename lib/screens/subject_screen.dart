@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_downloader/image_downloader.dart';
+import 'package:image_network/image_network.dart';
 import 'package:muet_past_papers/models/department.dart';
 import 'package:muet_past_papers/utils.dart';
 
@@ -246,15 +248,29 @@ class _SubjectScreenState extends State<SubjectScreen> {
                                                         .size
                                                         .width *
                                                     0.85,
-                                                child: Image.network(
-                                                  s.data![index]["paperUrl"],
-                                                  height: 400,
-                                                  width: MediaQuery.of(context)
-                                                          .size
-                                                          .width *
-                                                      0.85,
-                                                  fit: BoxFit.cover,
-                                                ),
+                                                child: kIsWeb
+                                                    ? ImageNetwork(
+                                                        image: s.data![index]
+                                                            ["paperUrl"],
+                                                        height: 400,
+                                                        width: MediaQuery.of(
+                                                                    context)
+                                                                .size
+                                                                .width *
+                                                            0.85,
+                                                        fitWeb: BoxFitWeb.cover,
+                                                      )
+                                                    : Image.network(
+                                                        s.data![index]
+                                                            ["paperUrl"],
+                                                        height: 400,
+                                                        width: MediaQuery.of(
+                                                                    context)
+                                                                .size
+                                                                .width *
+                                                            0.85,
+                                                        fit: BoxFit.cover,
+                                                      ),
                                               ),
                                             ),
                                             SizedBox(

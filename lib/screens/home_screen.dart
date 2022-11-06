@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_network/image_network.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:muet_past_papers/models/department.dart';
 import 'package:muet_past_papers/screens/department_screen.dart';
@@ -714,14 +716,21 @@ class DepartmentTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(15),
                 child: Opacity(
                   opacity: 1,
-                  child: Image.network(
-                    department.imageUrl,
-                    height: 160,
-                    width: 120,
-                    fit: BoxFit.cover,
-                    // colorBlendMode: BlendMode.saturation,
-                    // color: Colors.grey,
-                  ),
+                  child: kIsWeb
+                      ? ImageNetwork(
+                          image: department.imageUrl,
+                          height: 160,
+                          width: 120,
+                          fitWeb: BoxFitWeb.cover,
+                        )
+                      : Image.network(
+                          department.imageUrl,
+                          height: 160,
+                          width: 120,
+                          fit: BoxFit.cover,
+                          // colorBlendMode: BlendMode.saturation,
+                          // color: Colors.grey,
+                        ),
                 ),
               ),
             ),
